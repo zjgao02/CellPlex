@@ -1,0 +1,42 @@
+# CELLO adaptation of a pathology foundation model (scripts/train.py). Model, loss and optimisation follow CELLO's
+# defaults; only the number of epochs depends on the cohort.
+
+model:
+  cell_feature_mode: cross_attn    # grid-sampled query refined by distance-decay cross-attention, fused with CLS
+  use_distance_bias: true
+  model_dim: 768
+  heads: 8
+  dropout: 0.2
+  img_size: 224
+
+loss:
+  l_gene: 1.0                      # Huber (delta 1) on the cells
+  l_pg: 0.5                        # Huber on the summed levels of the tile (CLS head)
+
+train:
+  max_cells_per_patch: 256
+  batch_size_per_gpu: 64
+  num_workers: 8
+  lr_head: 2.0e-4
+  weight_decay_head: 0.05
+  lr_encoder: 5.0e-6               # warmed up to lr_encoder_max after the frozen phase
+  lr_encoder_max: 2.0e-5
+  weight_decay_encoder: 0.01
+  freeze_encoder_ratio: 0.1        # encoder frozen for the first 10% of training
+  gradual_unfreeze_ratio: 0.3      # encoder learning rate warmed up over the next 30%
+  grad_clip: 1.0
+  val_every: 5                     # epochs; with the per-step schedule, every epoch
+  val_batch_size: 64
+  seed: 42
+  epochs: 200
+  step_schedule: auto              # per-step frozen / warm-up / cosine schedule: on when epochs <= 20
+
+# epochs per cohort: arrays and regions 200; the whole-slide cohorts have far more tiles per epoch
+epochs:
+  orion_crc: 5
+  crc_tma: 200
+  multitumor: 200
+  bc_crc: 200
+  hnscc_ln: 200
+  bone_marrow: 50
+  glioma: 5

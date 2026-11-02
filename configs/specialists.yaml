@@ -1,0 +1,26 @@
+# Fine-tuning of the specialist models (scripts/finetune_specialist.py), each with its own objective and recipe.
+# Training amount = the tissue area seen by the CELLO runs of the cohort (budget_epochs x the fold's training tiles),
+# expressed as windows of the model's field of view; the checkpoint is the best of n_val evenly spaced validations.
+
+eva:
+  micro_batch: 8
+  accum: 4                 # effective batch 32
+  lr: 1.0e-4               # scaled by sqrt(batch / lr_ref_batch)
+  lr_ref_batch: 64
+  weight_decay: 0.05
+  warmup_steps: 300
+gigatime:
+  micro_batch: 64
+  accum: 1
+  lr: 3.0e-4
+  lr_ref_batch: 256
+  weight_decay: 1.0e-4
+  warmup_steps: 200
+
+n_val: 8
+val_blocks: 48             # whole-slide cohorts: validation on a fixed random subset of the 2048 px blocks
+budget_epochs:
+  default: 200
+  orion_crc: 5
+  bone_marrow: 5
+  glioma: 5

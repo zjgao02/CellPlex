@@ -1,0 +1,26 @@
+# Python >= 3.10; install PyTorch for your CUDA version first (pytorch.org), then: pip install -r requirements.txt
+torch>=2.1
+torchvision
+timm>=1.0
+huggingface_hub
+safetensors
+numpy
+pandas
+pyarrow
+scipy
+scikit-image
+opencv-python-headless
+pillow
+pyyaml
+tifffile
+zarr<3
+imagecodecs
+openslide-python        # also needs the OpenSlide library (e.g. conda install -c conda-forge openslide)
+h5py
+shapely
+statsmodels
+wandb                   # optional (--wandb online / offline)
+# specialist models (scripts/finetune_specialist.py), with their own repositories (docs/specialists.md)
+omegaconf
+einops
+# nucleus segmentation (scripts/preprocess): CellViT++ in its own environment, see its repository
