@@ -1,6 +1,6 @@
 """CELLO model for cell-level protein prediction from H&E.
 
-Adapted from CELLO (github.com/zjgao02/CELLO, cello/model.py), with the encoders used in CellPlex (UNI2-h,
+Adapted from CELLO (arXiv:2609.36429, cello/model.py), with the encoders used in CellPlex (UNI2-h,
 Virchow2, H-optimus-0); "genes" are the proteins of a cohort's panel here.
 
 One pathology-foundation-model (PFM) forward pass per 224x224 tile produces a 2-D token map. Each cell is queried at

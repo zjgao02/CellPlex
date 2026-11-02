@@ -9,15 +9,14 @@ into per-cell protein targets, and scores every model on the same cells, splits 
 * **Cohorts**: 717 samples, 44.8 million cells and 149 proteins, from colorectal and breast cancer to lymph-node
   metastases, bone marrow and glioma, on two imaging platforms (CODEX and Orion).
 * **Models**: pathology foundation models (UNI2-h, Virchow2, H-optimus-0) adapted to cells with
-  [CELLO](https://github.com/zjgao02/CELLO), linear probes on their frozen features, and the virtual-staining models Eva
+  [CELLO](https://arxiv.org/abs/2609.36429), linear probes on their frozen features, and the virtual-staining models Eva
   and GigaTIME, as released and fine-tuned on each cohort.
 * **Metrics**: per test sample, the Pearson correlation (PCC) and the cell-level structural similarity (SSIM) between
   predicted and measured levels across the sample's cells, averaged over proteins and then over test samples.
 
 This repository holds the code to build the benchmark from the original data releases, train and test every model,
 and reproduce the tables. The processed data are not redistributed; `data/README.md` lists where each cohort is
-downloaded from. Trained models of every fold are on Hugging Face:
-[gaozijun/CellPlex](https://huggingface.co/gaozijun/CellPlex).
+downloaded from.
 
 ## Quick start
 
@@ -78,13 +77,6 @@ specialist models.
 The H&E of BC/CRC and the bone-marrow multiplex images registered to the H&E were obtained from the authors and are
 not part of the public releases; `data/README.md` describes what can be rebuilt from public files for these cohorts.
 
-## Pretrained models
-
-[gaozijun/CellPlex](https://huggingface.co/gaozijun/CellPlex) holds the model of every fold of every cohort: CELLO
-with each foundation model (`cello/{encoder}/{cohort}/fold{k}`), the linear probes (`linear_probe/...`) and the
-fine-tuned Eva and GigaTIME (`eva_ft/...`, `gigatime_ft/...`), with inference code for whole images and nucleus
-centroids. Access is granted on request.
-
 ## Training
 
 **CELLO** (`scripts/train.py`, `configs/cello.yaml`): one forward pass of the foundation model per 224-pixel tile, the
@@ -144,7 +136,7 @@ python scripts/predict.py --ckpt $CELLPLEX_RUNS/multitumor/hoptimus0/fold0/best_
 ```
 
 `centroids.csv` holds the nucleus centroids (`x, y`, level-0 pixels); the image is resampled to the resolution of the
-model's training cohort. The Hugging Face repository has the same inference for its released models.
+model's training cohort.
 
 ## Repository layout
 

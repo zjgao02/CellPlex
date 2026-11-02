@@ -1,4 +1,4 @@
-"""Helpers from CELLO (github.com/zjgao02/CELLO, cello/dataset.py and cello/metrics.py), unchanged: training
+"""Helpers from CELLO (arXiv:2609.36429, cello/dataset.py and cello/metrics.py), unchanged: training
 augmentation, background filter, batch collation and the per-sample protein PCC used for checkpoint selection."""
 import random
 
