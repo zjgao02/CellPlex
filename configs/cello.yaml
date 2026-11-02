@@ -1,5 +1,5 @@
 # CELLO adaptation of a pathology foundation model (scripts/train.py). Model, loss and optimisation follow CELLO's
-# defaults; only the number of epochs depends on the cohort.
+# defaults; the number of epochs is given with --epochs.
 
 model:
   cell_feature_mode: cross_attn    # grid-sampled query refined by distance-decay cross-attention, fused with CLS
@@ -28,15 +28,5 @@ train:
   val_every: 5                     # epochs; with the per-step schedule, every epoch
   val_batch_size: 64
   seed: 42
-  epochs: 200
   step_schedule: auto              # per-step frozen / warm-up / cosine schedule: on when epochs <= 20
 
-# epochs per cohort: arrays and regions 200; the whole-slide cohorts have far more tiles per epoch
-epochs:
-  orion_crc: 5
-  crc_tma: 200
-  multitumor: 200
-  bc_crc: 200
-  hnscc_ln: 200
-  bone_marrow: 50
-  glioma: 5

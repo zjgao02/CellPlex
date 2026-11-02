@@ -7,14 +7,14 @@ objectives (--zeroshot: released weights, no training), scored like the CELLO ru
   gigatime  ImageNet-normalised RGB at 0.25 um/px, 128 um crops = 512 px as 4 windows of 256; one output per panel
             protein (cellplex/specialists/gigatime.py); BCE + Dice on tissue pixels; AdamW lr 3e-4 x sqrt(batch / 256),
             wd 1e-4, 200 warm-up steps, cosine, clip 1, batch 64 crops
-Training amount (configs/specialists.yaml): the tissue area of the CELLO runs (budget_epochs x the fold's training
-tiles) as windows of the model's field of view; the checkpoint is the best of --n_val validations on the fold's
+Training length (--epochs): passes over the tissue of the fold's training tiles, as windows of the model's field of
+view; the checkpoint is the best of --n_val validations on the fold's
 validation units (mean over samples of the mean protein PCC; whole-slide cohorts: a fixed random subset of their
 2048 px blocks). Optional early stopping (--patience, --min_delta) and time budget (--max_hours). Test: every cell of
 the test units, its value = mean prediction over its nucleus + 2 um region (cellplex/specialists/data.py).
 Eva and GigaTIME are installed from their own repositories (docs/specialists.md).
 
-  python scripts/finetune_specialist.py --model eva --cohort multitumor --fold 0
+  python scripts/finetune_specialist.py --model eva --cohort multitumor --fold 0 --epochs N
   python scripts/finetune_specialist.py --model gigatime --cohort multitumor --fold 0 --zeroshot
 Output: $CELLPLEX_RUNS/{cohort}/{model}_{ft|zeroshot}/fold{k}/ (config.json, train.log, best_model.pt, test/).
 """
@@ -41,6 +41,7 @@ def main():
     ap.add_argument('--cohort', required=True)
     ap.add_argument('--fold', type=int, required=True)
     ap.add_argument('--zeroshot', action='store_true')
+    ap.add_argument('--epochs', type=float, default=None, help='passes over the training tissue (required for fine-tuning)')
     ap.add_argument('--config', default=f'{REPO}/configs/specialists.yaml')
     ap.add_argument('--ckpt', default='', help='starting weights (default: the released weights from the Hugging Face hub)')
     ap.add_argument('--bs', type=int, default=None, help='micro-batch (default: configs/specialists.yaml)')
@@ -55,6 +56,8 @@ def main():
     ap.add_argument('--wandb', default='disabled', choices=['online', 'offline', 'disabled'])
     ap.add_argument('--wandb_project', default='cellplex')
     a = ap.parse_args()
+    if a.epochs is None and not (a.zeroshot or a.eval_only or a.max_steps):
+        ap.error('--epochs is required for fine-tuning')
     C = yaml.safe_load(open(a.config))
     R = C[a.model]
     a.bs, a.accum, a.n_val = a.bs or R['micro_batch'], a.accum or R['accum'], a.n_val or C['n_val']
@@ -76,8 +79,7 @@ def main():
     M = Specialist(a.model, a.cohort, proteins, m0, a.zeroshot, dev, a.ckpt or None)
     scored = [proteins[j] for j in M.keep]
     fov = M.W * M.mpp
-    epochs = C['budget_epochs'].get(a.cohort, C['budget_epochs']['default'])
-    area = epochs * int(tiles.unit.isin(U['train']).sum()) * (TILE * m0) ** 2   # um^2 seen by the CELLO runs
+    area = (a.epochs or 0) * int(tiles.unit.isin(U['train']).sum()) * (TILE * m0) ** 2   # um^2 of training tissue
     n_win = int(area / fov ** 2)
     steps = n_win // eff if not a.max_steps else a.max_steps
     val_blocks = C['val_blocks'] if meta['reader'] == 'wsi' else None

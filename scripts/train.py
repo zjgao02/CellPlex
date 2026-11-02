@@ -3,12 +3,13 @@
 Recipe (configs/cello.yaml, CELLO's defaults): CELLO cross-attention model, Huber cell loss + 0.5 x patch loss, AdamW
 (encoder 5e-6 -> 2e-5, wd 0.01; head 2e-4, wd 0.05), cosine schedule, fp16 autocast + GradScaler, grad clip 1.0,
 encoder frozen for the first 10% of training, linear encoder-LR warm-up over the next 30%, then fully fine-tuned;
-batch 64 tiles; <= 256 cells per training tile. With <= 20 epochs (the whole-slide cohorts) the same ratios are
-applied per step and validation runs every epoch, otherwise at epoch 0 and every 5 epochs. Validation score = mean
+batch 64 tiles; <= 256 cells per training tile. The number of epochs is given with --epochs. With the per-step
+schedule (--step_schedule, default on for runs of <= 20 epochs) the same ratios are applied per step and validation
+runs every epoch, otherwise at epoch 0 and every 5 epochs. Validation score = mean
 over validation samples of the sample's mean protein PCC (every cell of every foreground tile); the best checkpoint is
 kept. The best checkpoint then predicts every cell of the test units -> {out}/test (cellplex/engine.py).
 
-  python scripts/train.py --cohort multitumor --fold 0 --encoder hoptimus0
+  python scripts/train.py --cohort multitumor --fold 0 --encoder hoptimus0 --epochs N
   python scripts/train.py --cohort multitumor --fold 0 --encoder hoptimus0 --eval_only      test best_model.pt again
   python scripts/train.py --cohort multitumor --fold 0 --encoder uni2 --max_steps_per_epoch 3 --epochs 1   smoke test
 Encoders: uni2 (MahmoodLab/UNI2-h), virchow2 (paige-ai/Virchow2), hoptimus0 (bioptimus/H-optimus-0); their weights
@@ -30,11 +31,9 @@ from cellplex.model import CELLO  # noqa: E402
 from cellplex.paths import REPO, run_dir  # noqa: E402
 
 
-def load_config(path, cohort):
+def load_config(path):
     C = yaml.safe_load(open(path))
-    cfg = {**C['model'], **C['loss'], **C['train']}
-    cfg['epochs'] = C.get('epochs', {}).get(cohort, cfg['epochs'])
-    return cfg
+    return {**C['model'], **C['loss'], **C['train']}
 
 
 def main():
@@ -44,7 +43,7 @@ def main():
     ap.add_argument('--encoder', required=True, help='uni2 | virchow2 | hoptimus0')
     ap.add_argument('--config', default=f'{REPO}/configs/cello.yaml')
     ap.add_argument('--out', default=None, help='default: $CELLPLEX_RUNS/{cohort}/{encoder}/fold{k}')
-    ap.add_argument('--epochs', type=int, default=None)
+    ap.add_argument('--epochs', type=int, default=None, help='training epochs (required unless --eval_only)')
     ap.add_argument('--batch_size_per_gpu', type=int, default=None)
     ap.add_argument('--num_workers', type=int, default=None)
     ap.add_argument('--max_steps_per_epoch', type=int, default=0, help='smoke test only (also: 100 val / test tiles per sample)')
@@ -56,7 +55,9 @@ def main():
     ap.add_argument('--wandb', default='disabled', choices=['online', 'offline', 'disabled'])
     ap.add_argument('--wandb_project', default='cellplex')
     a = ap.parse_args()
-    cfg = dict(load_config(a.config, a.cohort), vision_encoder=a.encoder)
+    if a.epochs is None and not a.eval_only:
+        ap.error('--epochs is required for training')
+    cfg = dict(load_config(a.config), vision_encoder=a.encoder)
     for k in ('epochs', 'batch_size_per_gpu', 'num_workers'):
         if getattr(a, k) is not None:
             cfg[k] = getattr(a, k)

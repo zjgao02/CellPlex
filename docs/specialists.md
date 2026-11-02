@@ -37,12 +37,12 @@ predicted maps over; both are written by the preprocessing scripts (`scripts/pre
 ## Running
 
 ```bash
-python scripts/finetune_specialist.py --model eva --cohort multitumor --fold 0               # fine-tune and test
+python scripts/finetune_specialist.py --model eva --cohort multitumor --fold 0 --epochs N    # fine-tune and test
 python scripts/finetune_specialist.py --model gigatime --cohort multitumor --fold 0 --zeroshot
 python scripts/finetune_specialist.py --model eva --cohort multitumor --fold 0 --eval_only   # test best_model.pt again
 ```
 
-The training budget, batch sizes and learning rates are in `configs/specialists.yaml`. Eva is trained with a
+Batch sizes and learning rates are in `configs/specialists.yaml`; the training length is set with `--epochs`. Eva is trained with a
 micro-batch of 8 and 4 accumulation steps (a 96 GB GPU); lower `--bs` and raise `--accum` on smaller GPUs.
 Outputs follow the CELLO runs (`$CELLPLEX_RUNS/{cohort}/{eva,gigatime}_{ft,zeroshot}/fold{k}/test/`), so
 `scripts/evaluate.py` scores all methods together.

@@ -33,7 +33,7 @@ export CELLPLEX_DATA=/path/to/cellplex    # processed cohorts
 export CELLPLEX_RUNS=/path/to/runs        # checkpoints and test predictions
 
 python scripts/preprocess/build_dataset.py --cohort multitumor          # after the cohort's preprocessing steps
-python scripts/train.py --cohort multitumor --fold 0 --encoder hoptimus0
+python scripts/train.py --cohort multitumor --fold 0 --encoder hoptimus0 --epochs N
 python scripts/evaluate.py --cohorts multitumor
 ```
 
@@ -94,13 +94,13 @@ the encoder is frozen for the first 10% of training, its learning rate warmed up
 fine-tuned with the rest of the model. One GPU per run.
 
 ```bash
-python scripts/train.py --cohort multitumor --fold 0 --encoder hoptimus0          # uni2 | virchow2 | hoptimus0
+python scripts/train.py --cohort multitumor --fold 0 --encoder hoptimus0 --epochs N   # uni2 | virchow2 | hoptimus0
 python scripts/train.py --cohort multitumor --fold 0 --encoder hoptimus0 --eval_only
 ```
 
-Epochs: 200 for the array and region cohorts, 5 for Orion-CRC and glioma, 50 for bone marrow. The checkpoint with the
-best validation score (mean over validation samples of the sample's mean protein PCC) is tested on every cell of the
-test units. Output: `$CELLPLEX_RUNS/{cohort}/{encoder}/fold{k}/`.
+The number of epochs is set with `--epochs`. The checkpoint with the best validation score (mean over validation
+samples of the sample's mean protein PCC) is tested on every cell of the test units. Output:
+`$CELLPLEX_RUNS/{cohort}/{encoder}/fold{k}/`.
 
 **Linear probe** (`scripts/linear_probe.py`): the frozen encoder's final token map sampled at every nucleus, and a
 ridge regression to all proteins whose regularisation is chosen on the validation set.
@@ -111,11 +111,10 @@ python scripts/linear_probe.py fit --cohort multitumor --encoder hoptimus0      
 ```
 
 **Specialist models** (`scripts/finetune_specialist.py`, `configs/specialists.yaml`): Eva and GigaTIME as released
-(`--zeroshot`) and fine-tuned on each fold with their own pixel-level objectives and a training budget matched to
-CELLO. Their code comes from their own repositories; see `docs/specialists.md`.
+(`--zeroshot`) and fine-tuned on each fold with their own pixel-level objectives. Their code comes from their own repositories; see `docs/specialists.md`.
 
 ```bash
-python scripts/finetune_specialist.py --model eva --cohort multitumor --fold 0
+python scripts/finetune_specialist.py --model eva --cohort multitumor --fold 0 --epochs N
 python scripts/finetune_specialist.py --model gigatime --cohort multitumor --fold 0 --zeroshot
 ```
 

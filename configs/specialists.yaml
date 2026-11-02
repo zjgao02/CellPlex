@@ -1,5 +1,5 @@
 # Fine-tuning of the specialist models (scripts/finetune_specialist.py), each with its own objective and recipe.
-# Training amount = the tissue area seen by the CELLO runs of the cohort (budget_epochs x the fold's training tiles),
+# Training length: --epochs of scripts/finetune_specialist.py, passes over the tissue of the fold's training tiles
 # expressed as windows of the model's field of view; the checkpoint is the best of n_val evenly spaced validations.
 
 eva:
@@ -19,8 +19,3 @@ gigatime:
 
 n_val: 8
 val_blocks: 48             # whole-slide cohorts: validation on a fixed random subset of the 2048 px blocks
-budget_epochs:
-  default: 200
-  orion_crc: 5
-  bone_marrow: 5
-  glioma: 5
